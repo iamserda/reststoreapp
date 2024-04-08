@@ -1,6 +1,6 @@
-# Basic Flask Application
+# A simple REST API build with Python via Flask with a SQL DB, and more... by [@iamserda](https://twitter.com/iamserda)
 
-This is a basic Flask application designed to demonstrate a simple web application structure using Flask, a lightweight WSGI web application framework in Python.
+TO BE UPDATED: This is a basic Flask application designed to demonstrate a simple web application structure using Flask, a lightweight WSGI web application framework in Python.
 
 ## Getting Started
 
