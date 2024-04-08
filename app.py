@@ -22,19 +22,22 @@ stores = [
 @app.get("/") # http://example.com/
 def get_homepage():
     """returns all items within store array"""
-    return "<h1>Hello World</h1>"
+    return '<html><head><meta name="title" content="Build REST APIs with Flask and Python (The Complete Course)"></head><body><h1>The REST store app</body</html>'
 
-@app.get("/store")
+@app.get("/store") #http://example.com/store
 def get_all_stores():
     """returns container stores"""
     return {"stores": stores}
 
-@app.get("/store/<string:name>")
+@app.get("/store/<string:name>") #http://example.com/store/brooklyn
 def get_store_by_name(name):
     """returns a store based on its name."""
+    result = {"store": None}
     for item in stores:
         if item["name"] == name:
-            return item, 200
+            result = item
+            return result, 200
+    return result,404
 
 @app.get("/store/<int:store_id>")
 def get_store_by_id(store_id):
@@ -47,9 +50,27 @@ def get_store_by_id(store_id):
     return result,404
 
 @app.post("/store")
-def create_store():
+def add_new_store():
     """returns the most recently added item."""
     req_data = request.get_json()
-    print(type(req_data))
-    stores.append(req_data)
+    new_store = {
+        "store_id": len(stores) + 1,
+        "name": req_data["name"],
+        "items": req_data["items"]
+    }
+    print(new_store)
+    stores.append(new_store)
     return stores[-1], 201
+
+@app.post("/store/<string:store_name>/")
+def add_items(store_name):
+    requested_data = request.get_json()
+    for store in stores:
+        print(store["name"])
+        if store["name"] == store_name:
+            if not store.get("items"):
+                store["items"] = []
+            for item in requested_data["items"]:
+                store["items"].append(item)
+            return store, 201
+    return {"message": "Store was not found or Invalid store."}, 404
