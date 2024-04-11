@@ -1,4 +1,6 @@
+import copy
 from flask import Flask, request
+
 
 app = Flask(__name__)
 
@@ -22,12 +24,12 @@ stores = [
 @app.get("/") # http://example.com/
 def get_homepage():
     """returns all items within store array"""
-    return '<html><head><meta name="title" content="Build REST APIs with Flask and Python (The Complete Course)"></head><body><h1>The REST store app</body</html>'
+    return '<html><head><meta name="title" content="Build REST APIs with Flask and Python (The Complete Course)"></head><body><h1>The REST store app</body</html>', 200
 
 @app.get("/store") #http://example.com/store
 def get_all_stores():
     """returns container stores"""
-    return {"stores": stores}
+    return {"stores": stores}, 200
 
 @app.get("/store/<string:name>") #http://example.com/store/brooklyn
 def get_store_by_name(name):
@@ -62,15 +64,32 @@ def add_new_store():
     stores.append(new_store)
     return stores[-1], 201
 
-@app.post("/store/<string:store_name>/")
-def add_items(store_name):
+@app.post("/store/<string:store_name>/item")
+def add_new_item(store_name):
     requested_data = request.get_json()
+    item_name, item_price = requested_data["name"], requested_data["price"]
     for store in stores:
-        print(store["name"])
         if store["name"] == store_name:
-            if not store.get("items"):
-                store["items"] = []
-            for item in requested_data["items"]:
-                store["items"].append(item)
+            store["items"].append({"name": item_name, "price": item_price})
             return store, 201
     return {"message": "Store was not found or Invalid store."}, 404
+
+@app.get("/store/<string:store_name>/item")
+def get_store_items(store_name):
+    for store in stores:
+        if store["name"] == store_name:
+            return {"items": store["items"]}, 200
+    return {"message": "Store not found!"}, 404
+
+@app.post("/store/<string:store_name>/<string:item_name>/<float:new_price>")
+def update_item_price(store_name, item_name, new_price):
+    store = [store for store in stores if store["name"] == store_name]
+    if not store:
+        return {"message": "Store not found!"}, 404
+    old_store = copy.deepcopy(store[0])
+    for item in store[0]["items"]:
+        if item["name"] == item_name:
+            item["price"] = float(new_price)
+            return {"before": old_store, "after": store},201
+    return {"message": "Item not found!"}, 404
+
