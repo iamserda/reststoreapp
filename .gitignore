@@ -1,3 +1,5 @@
 .venv
+.pylintrc
 *__pycache__*
 *.vscode*
+app-other.py
