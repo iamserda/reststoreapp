@@ -44,15 +44,22 @@ def handle_books():
             return {"message": "Failed!", "books": inwood_library["books"]}, 404
 
 # handling BOOkS related request/response
-@app.route("/api/book/<int:id>")
+@app.get("/api/book/name/<string:title>")
+def get_book_by_name(title):
+    for book in inwood_library['books']:
+        print(type(title), book["title"])
+        if book["title"] == title:
+            return {"book": book}, 200
+    return {"message": f"Title '{title}' was NOT found in the library."}, 404
+
+@app.get("/api/book/id/<int:id>")
 def get_book_by_id(id):
     for book in inwood_library.get("books"):
         if book["id"] == id:
             return {"book": book}
-        else:
-            return {"message": "404: Not Found!"}, 404
+    return {"message": "404: Not Found!"}, 404
 
-@app.post("/api/book")
+@app.route("/api/book", methods=["GET", "POST"])
 def add_new_book():
     book_info = request.get_json()
     new_book = {"id": len(inwood_library["books"]) + 1}
@@ -61,10 +68,17 @@ def add_new_book():
     inwood_library["books"].append(new_book)
     return inwood_library["books"][-1]
 
+
+
 # handling MOVIES related request/response
-@app.get("/api/movies/")
-def get_movies():
-    return { "movies": inwood_library["movies"]}
+@app.route("/api/movies/", methods=["GET", "POST"])
+def handle_movies():
+    if request.method == "GET":
+        # TODO
+        return { "movies": inwood_library["movies"]}
+    if request.method == "POST":
+        # TODO
+        pass
 
 # handling EVENTS related request/response
 @app.route("/api/events", methods=["GET", "POST"])
