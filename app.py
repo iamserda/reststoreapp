@@ -1,12 +1,9 @@
 from flask import Flask, request
+from database import events, books, movies
+from flask_smorest import abort
+from helpers import add_new_books
 
 app = Flask("__name__")
-
-inwood_library = {
-    "books": [{"id": 1, "title": "1984", "author": "George Orwell", "publisher": "Penguin"}],
-    "movies": [],
-    "events": [],
-    }
 
 @app.get("/")
 def show_homepage():
@@ -34,48 +31,61 @@ def show_homepage():
 @app.route("/api/books/", methods=["GET", "POST"])
 def handle_books():
     if request.method == "GET":
-        return { "books": inwood_library["books"]}, 200
+        return { "books": books}, 200
     if request.method == "POST":
         new_books = request.get_json()
-        inserted_books = add_new_books(new_books, inwood_library)
+        inserted_books = add_new_books(new_books, books)
         if inserted_books:
-            return {"books": inwood_library["books"], "message": "Success!"}, 201
+            return {"books": books, "message": "Success!"}, 201
         else:
-            return {"message": "Failed!", "books": inwood_library["books"]}, 404
+            abort(404, message="Failed!")
 
 # handling BOOkS related request/response
 @app.get("/api/book/name/<string:title>")
 def get_book_by_name(title):
-    for book in inwood_library['books']:
-        print(type(title), book["title"])
+    for book in books.values():
         if book["title"] == title:
             return {"book": book}, 200
-    return {"message": f"Title '{title}' was NOT found in the library."}, 404
+    abort(404, message=f"Title '{title}' was NOT found in our library. \
+        Please check the book's title and try again.")
 
-@app.get("/api/book/id/<int:id>")
-def get_book_by_id(id):
-    for book in inwood_library.get("books"):
-        if book["id"] == id:
-            return {"book": book}
-    return {"message": "404: Not Found!"}, 404
+@app.get("/api/book/id/<int:book_id>")
+def get_book_by_id(book_id):
+    book = books.get(book_id)
+    if book:
+        return {"book": book}, 200
+    else:
+        abort(400, message="Book not found!")
 
 @app.route("/api/book", methods=["GET", "POST"])
 def add_new_book():
     book_info = request.get_json()
-    new_book = {"id": len(inwood_library["books"]) + 1}
-    for k,v in book_info.items():
-        new_book[k] = v    
-    inwood_library["books"].append(new_book)
-    return inwood_library["books"][-1]
+    try:
+        if book_info["title"]:
+            book_id = len(books.keys()) + 1
+            books[book_id] = book_info
+            return {"book": books[book_id]}, 200
+    except KeyError:
+        abort(400, message="Operation failed. Could not add book to the library, \
+                data provided is incomplete. Please check the title, author, \
+                    and publisher, and try again")
 
-
-
+@app.delete("/api/book/<string:book_id>")
+def delete_book(book_id):
+    id = int(id)
+    try:
+        book = books[id]
+        message = {"message": f"Deleting book {books[id]["title"]} from library..."}
+        del(books[id])
+        return 
+    except KeyError:
+        return 
 # handling MOVIES related request/response
 @app.route("/api/movies/", methods=["GET", "POST"])
 def handle_movies():
     if request.method == "GET":
         # TODO
-        return { "movies": inwood_library["movies"]}
+        return { "movies": movies}
     if request.method == "POST":
         # TODO
         pass
@@ -85,20 +95,7 @@ def handle_movies():
 def handle_events():
     if request.method == "POST":
         #TODO
-        return {"message": "Received POST Request! Handle later..."}
+        return {"message": "Received POST Request! Handle later..."}, 200
     else:
         #TODO
-        return {"events": inwood_library["events"]}
-
-# Helpers, TODO: move these to some directory
-def add_new_books(books:list, book_list:list):
-        if not books:
-            return False
-        for book in books:
-            count = len(book_list["books"])
-            new_book = {"id": count + 1}
-            for k, v in book.items():
-                new_book[k] = v
-            print(new_book)
-            book_list["books"].append(new_book)
-        return True
+        return {"events": events}, 200
